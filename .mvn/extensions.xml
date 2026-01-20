@@ -1,7 +1,8 @@
 <extensions>
     <extension>
         <groupId>org.jfrog.buildinfo</groupId>
-        <artifactId>build-info-extractor-maven3-uber</artifactId>
-        <version>2.43.5</version>
+        <artifactId>build-info-extractor-maven3</artifactId>
+        <version>2.42.2</version>
+        <classifier>uber</classifier>
     </extension>
 </extensions>

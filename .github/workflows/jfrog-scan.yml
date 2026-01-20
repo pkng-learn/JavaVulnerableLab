@@ -46,7 +46,7 @@ jobs:
           
           # 2. Run standard 'mvn'. The extension handles build-info automatically.
           # We pass build name and number as system properties.
-          mvn clean install -Dbuild.name=my-maven-build -Dbuild.number=${{ github.run_id }}
+          mvn clean install -Dbuild.name=my-maven-build -Dbuild.number=${{ github.run_id }} -Dmaven.repo.remote=https://releases.jfrog.io/artifactory/oss-release-local
 
           # 3. Publish build info to Artifactory
           jf rt build-publish my-maven-build ${{ github.run_id }}
