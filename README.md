@@ -73,3 +73,15 @@ How to Use/Setup ?
 Get the VulnerableSpring Project from here:
 https://github.com/CSPF-Founder/VulnerableSpring
 
+---
+
+# References
+JFrog platform integration with github [[1]]  
+JFrog XRay ci/cd integration [[2]]  
+SonarQube Cloud integration with GitHub Actions [[3]]  
+SonarScanner for Maven [[4]]  
+
+[1]: https://jfrog.com/help/r/jfrog-platform-administration-documentation/integration-with-github
+[2]: https://jfrog.com/help/r/jfrog-security-user-guide/products/xray/xray-management/ci-cd-integration-with-xray
+[3]:https://docs.sonarsource.com/sonarqube-cloud/advanced-setup/ci-based-analysis/github-actions-for-sonarcloud
+[4]:https://docs.sonarsource.com/sonarqube-server/analyzing-source-code/scanners/sonarscanner-for-maven

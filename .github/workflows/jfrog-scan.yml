@@ -1,0 +1,80 @@
+name: "JFrog Artifactory & Xray Scan"
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      # This is required for requesting the OIDC token
+      id-token: write
+      # This is required for actions/checkout
+      contents: read
+      # Required to upload Xray results to Security tab
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          # Use OIDC if configured via the App, or secrets for Self-Hosted
+          JF_URL: ${{ vars.JF_URL }}
+        with:
+          oidc-provider-name: pkng-learn/JavaVulnerableLab@github
+          # version: latest  
+
+      - name: Run JFrog CLI
+        run: |
+          # Ping the server
+          jf rt ping
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Maven Build & Xray Scan
+        run: |
+          # 1. Config Maven to use Artifactory
+          jf mvn-config \
+            --repo-deploy-releases=pkng-libs-release-local \
+            --repo-deploy-snapshots=pkng-libs-snapshot-local \
+            --repo-resolve-releases=pkng-libs-release \
+            --repo-resolve-snapshots=pkng-libs-snapshot 
+          
+          # 2. Extract Token via 'jf c export' (The correct V2 syntax)
+          # We use base64 decode because export returns a base64 string
+          JF_ACCESS_TOKEN=$(jf c export setup-jfrog-cli-server | base64 --decode | jq -r .accessToken)
+
+          # 2.1 Download the Uber Extractor directly from JFrog
+          # We use the generic 'dl' command to fetch the JAR to the local runner
+          # The path below is the standard structure in JFrog's OSS repo
+          jf rt dl "oss-release-local/org/jfrog/buildinfo/build-info-extractor-maven3/2.42.2/build-info-extractor-maven3-2.42.2-uber.jar" ./extractor.jar
+
+          # 4. NATIVE Build + Token Injection
+          # We use the standard -DaltDeploymentRepository
+          # The extractor.jar will automatically pick up JF_ARTIFACTORY_TOKEN from the env
+          export JF_ARTIFACTORY_TOKEN=$JF_ACCESS_TOKEN
+
+          # 2.2 Run standard 'mvn'. The extension handles build-info automatically.
+          # We pass build name and number as system properties.
+          mvn clean deploy \
+            -Dmaven.ext.class.path=$(pwd)/extractor.jar \
+            -Dbuild.name=my-maven-build \
+            -Dbuild.number=${{ github.run_id }} \
+            -DpublishArtifacts=true \
+            -DaltDeploymentRepository=setup-jfrog-cli-server::${{ vars.JF_URL }}/artifactory/pkng-libs-snapshot-local
+
+          # 3. Publish build info to Artifactory
+          jf rt build-publish my-maven-build ${{ github.run_id }}
+          
+          # 4. Optional: Push security results to GitHub Security Tab
+          jf build-scan my-maven-build ${{ github.run_id }} --format=sarif --vuln > xray-results.sarif
+
+      - name: Upload Xray Results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: xray-results.sarif
