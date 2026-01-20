@@ -47,6 +47,11 @@ jobs:
 
           # 2. Build and scan with Xray
           # jf mvn clean install --build-name=my-maven-build --build-number=${{ github.run_id }} --scan
+
+          # 2. Get the Dynamic Server ID from JFrog CLI config
+          # This ensures we use the exact ID the CLI is using for your OIDC session
+          SERVER_ID=$(jf c show --format json | jq -r '.[0].serverId')
+          echo "Detected JFrog Server ID: $SERVER_ID"
           
           # 2.1 Download the Uber Extractor directly from JFrog
           # We use the generic 'dl' command to fetch the JAR to the local runner
@@ -60,7 +65,7 @@ jobs:
             -Dbuild.name=my-maven-build \
             -Dbuild.number=${{ github.run_id }} \
             -DpublishArtifacts=true \
-            -DaltDeploymentRepository=central::default::${{ vars.JF_URL }}/artifactory/pkng-libs-snapshot-local
+            -DaltDeploymentRepository=${SERVER_ID}::default::${{ vars.JF_URL }}/artifactory/pkng-libs-snapshot-local
 
           # 3. Publish build info to Artifactory
           jf rt build-publish my-maven-build ${{ github.run_id }}
