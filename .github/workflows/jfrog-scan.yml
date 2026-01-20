@@ -45,9 +45,9 @@ jobs:
             --repo-resolve-releases=pkng-libs-release \
             --repo-resolve-snapshots=pkng-libs-snapshot 
           
-          # 2. Extract Token using the correct command syntax
-          # We use 'jf c show' to get the current server details
-          JF_ACCESS_TOKEN=$(jf c show setup-jfrog-cli-server --format=json | jq -r '.[0].accessToken')
+          # 2. Extract Token via 'jf c export' (The correct V2 syntax)
+          # We use base64 decode because export returns a base64 string
+          JF_ACCESS_TOKEN=$(jf c export setup-jfrog-cli-server | base64 --decode | jq -r .accessToken)
 
           # 2.1 Download the Uber Extractor directly from JFrog
           # We use the generic 'dl' command to fetch the JAR to the local runner
