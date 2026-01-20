@@ -39,7 +39,11 @@ jobs:
       - name: Maven Build & Xray Scan
         run: |
           # 1. Config Maven to use Artifactory
-          jf mvn-config --repo-deploy-releases=pkng-libs-release-local --repo-deploy-snapshots=pkng-libs-snapshot-local --repo-resolve-releases=pkng-libs-release --repo-resolve-snapshots=pkng-libs-snapshot 
+          jf mvn-config \
+            --repo-deploy-releases=pkng-libs-release-local \
+            --repo-deploy-snapshots=pkng-libs-snapshot-local \
+            --repo-resolve-releases=pkng-libs-release \
+            --repo-resolve-snapshots=pkng-libs-snapshot 
 
           # 2. Build and scan with Xray
           # jf mvn clean install --build-name=my-maven-build --build-number=${{ github.run_id }} --scan
@@ -55,7 +59,8 @@ jobs:
             -Dmaven.ext.class.path=$(pwd)/extractor.jar \
             -Dbuild.name=my-maven-build \
             -Dbuild.number=${{ github.run_id }} \
-            -DpublishArtifacts=true
+            -DpublishArtifacts=true \
+            -DaltDeploymentRepository=central::default::${{ vars.JF_URL }}/artifactory/pkng-libs-snapshot-local
 
           # 3. Publish build info to Artifactory
           jf rt build-publish my-maven-build ${{ github.run_id }}
