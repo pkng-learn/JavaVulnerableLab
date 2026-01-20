@@ -44,6 +44,10 @@ jobs:
             --repo-deploy-snapshots=pkng-libs-snapshot-local \
             --repo-resolve-releases=pkng-libs-release \
             --repo-resolve-snapshots=pkng-libs-snapshot 
+          
+          # 1.2. FORCE the CLI to generate a standard settings.xml
+          # This command creates a temporary settings file that includes your OIDC/Access Token
+          jf mvn-config --settings-output=$(pwd)/custom_settings.xml
 
           # 2. Build and scan with Xray
           # jf mvn clean install --build-name=my-maven-build --build-number=${{ github.run_id }} --scan
@@ -61,7 +65,7 @@ jobs:
           # 2.2 Run standard 'mvn'. The extension handles build-info automatically.
           # We pass build name and number as system properties.
           mvn clean deploy \
-            -s .jfrog/maven/settings.xml \
+            -s $(pwd)/maven/settings.xml \
             -Dmaven.ext.class.path=$(pwd)/extractor.jar \
             -Dbuild.name=my-maven-build \
             -Dbuild.number=${{ github.run_id }} \
