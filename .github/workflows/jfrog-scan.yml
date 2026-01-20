@@ -22,7 +22,8 @@ jobs:
           # Use OIDC if configured via the App, or secrets for Self-Hosted
           JF_URL: ${{ vars.JF_URL }}
         with:
-          oidc-provider-name: pkng-learn/JavaVulnerableLab@github  
+          oidc-provider-name: pkng-learn/JavaVulnerableLab@github
+          # version: latest  
 
       - name: Run JFrog CLI
         run: |
@@ -41,8 +42,12 @@ jobs:
           jf mvn-config --repo-deploy-releases=pkng-libs-release-local --repo-deploy-snapshots=pkng-libs-snapshot-local --repo-resolve-releases=pkng-libs-release --repo-resolve-snapshots=pkng-libs-snapshot 
 
           # 2. Build and scan with Xray
-          jf mvn clean install --build-name=my-maven-build --build-number=${{ github.run_id }} --scan
+          # jf mvn clean install --build-name=my-maven-build --build-number=${{ github.run_id }} --scan
           
+          # 2. Run standard 'mvn'. The extension handles build-info automatically.
+          # We pass build name and number as system properties.
+          mvn clean install -Dbuild.name=my-maven-build -Dbuild.number=${{ github.run_id }}
+
           # 3. Publish build info to Artifactory
           jf rt build-publish my-maven-build ${{ github.run_id }}
           
