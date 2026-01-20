@@ -38,8 +38,8 @@ jobs:
       - name: Maven Build & Xray Scan
         run: |
           # 1. Config Maven to use Artifactory
-          jf mvn-config --repo-resolve-releases-virtual=maven-virt --repo-deploy-releases-virtual=maven-virt
-          
+          jf mvn-config --repo-deploy-releases=pkng-libs-release-local --repo-deploy-snapshots=pkng-libs-snapshot-local --repo-resolve-releases=pkng-libs-release --repo-resolve-snapshots=pkng-libs-snapshot 
+
           # 2. Build and scan with Xray
           jf mvn clean install --build-name=my-app --build-number=${{ github.run_id }} --scan
           
