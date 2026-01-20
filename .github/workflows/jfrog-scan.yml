@@ -45,15 +45,19 @@ jobs:
             --repo-resolve-releases=pkng-libs-release \
             --repo-resolve-snapshots=pkng-libs-snapshot 
           
-          # 2. Extract Credentials (The Bridge for 401 errors)
-          # We export the OIDC token/credentials from the CLI to environment variables
-          export JF_TOKEN=$(jf c export setup-jfrog-cli-server --format=json | jq -r .accessToken)
-          export JF_USER=$(jf c export setup-jfrog-cli-server --format=json | jq -r .user)
+          # 2. Extract Token using the correct command syntax
+          # We use 'jf c show' to get the current server details
+          JF_ACCESS_TOKEN=$(jf c show setup-jfrog-cli-server --format=json | jq -r '.[0].accessToken')
 
           # 2.1 Download the Uber Extractor directly from JFrog
           # We use the generic 'dl' command to fetch the JAR to the local runner
           # The path below is the standard structure in JFrog's OSS repo
           jf rt dl "oss-release-local/org/jfrog/buildinfo/build-info-extractor-maven3/2.42.2/build-info-extractor-maven3-2.42.2-uber.jar" ./extractor.jar
+
+          # 4. NATIVE Build + Token Injection
+          # We use the standard -DaltDeploymentRepository
+          # The extractor.jar will automatically pick up JF_ARTIFACTORY_TOKEN from the env
+          export JF_ARTIFACTORY_TOKEN=$JF_ACCESS_TOKEN
 
           # 2.2 Run standard 'mvn'. The extension handles build-info automatically.
           # We pass build name and number as system properties.
@@ -62,9 +66,7 @@ jobs:
             -Dbuild.name=my-maven-build \
             -Dbuild.number=${{ github.run_id }} \
             -DpublishArtifacts=true \
-            -DaltDeploymentRepository=setup-jfrog-cli-server::${{ vars.JF_URL }}/artifactory/pkng-libs-snapshot-local \
-            -Dartifactory.username=$JF_USER \
-            -Dartifactory.password=$JF_TOKEN
+            -DaltDeploymentRepository=setup-jfrog-cli-server::${{ vars.JF_URL }}/artifactory/pkng-libs-snapshot-local
 
           # 3. Publish build info to Artifactory
           jf rt build-publish my-maven-build ${{ github.run_id }}
