@@ -1,0 +1,55 @@
+name: "JFrog Artifactory & Xray Scan"
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      # This is required for requesting the OIDC token
+      id-token: write
+      # This is required for actions/checkout
+      contents: read
+      # Required to upload Xray results to Security tab
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JFrog CLI
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          # Use OIDC if configured via the App, or secrets for Self-Hosted
+          JF_URL: ${{ vars.JF_URL }}
+        with:
+          oidc-provider-name: pkng-learn/JavaVulnerableLab@github  
+
+      - name: Run JFrog CLI
+        run: |
+          # Ping the server
+          jf rt ping
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Maven Build & Xray Scan
+        run: |
+          # 1. Config Maven to use Artifactory
+          jf mvn-config --repo-resolve-releases-virtual=maven-virt --repo-deploy-releases-virtual=maven-virt
+          
+          # 2. Build and scan with Xray
+          jf mvn clean install --build-name=my-app --build-number=${{ github.run_id }} --scan
+          
+          # 3. Publish build info to Artifactory
+          jf rt build-publish my-app ${{ github.run_id }}
+          
+          # 4. Optional: Push security results to GitHub Security Tab
+          jf build-scan --format=sarif --build-name=my-app --build-number=${{ github.run_id }} > xray-results.sarif
+
+      - name: Upload Xray Results to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: xray-results.sarif

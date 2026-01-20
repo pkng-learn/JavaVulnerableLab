@@ -73,3 +73,12 @@ How to Use/Setup ?
 Get the VulnerableSpring Project from here:
 https://github.com/CSPF-Founder/VulnerableSpring
 
+---
+
+# References
+JFrog platform integration with github [[1]]  
+JFrog XRay ci/cd integration [[2]]  
+
+
+[1]: https://jfrog.com/help/r/jfrog-platform-administration-documentation/integration-with-github
+[2]: https://jfrog.com/help/r/jfrog-security-user-guide/products/xray/xray-management/ci-cd-integration-with-xray
