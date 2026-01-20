@@ -44,9 +44,14 @@ jobs:
           # 2. Build and scan with Xray
           # jf mvn clean install --build-name=my-maven-build --build-number=${{ github.run_id }} --scan
           
-          # 2. Run standard 'mvn'. The extension handles build-info automatically.
+          # 2.1 Download the Uber Extractor directly from JFrog
+          # We use the generic 'dl' command to fetch the JAR to the local runner
+          # The path below is the standard structure in JFrog's OSS repo
+          jf rt dl "oss-release-local/org/jfrog/buildinfo/build-info-extractor-maven3/2.42.2/build-info-extractor-maven3-2.42.2-uber.jar" ./extractor.jar
+
+          # 2.2 Run standard 'mvn'. The extension handles build-info automatically.
           # We pass build name and number as system properties.
-          mvn clean install -Dbuild.name=my-maven-build -Dbuild.number=${{ github.run_id }} -Dmaven.repo.remote=https://releases.jfrog.io/artifactory/oss-release-local
+          mvn clean install -Dmaven.ext.class.path=$(pwd)/extractor.jar -Dbuild.name=my-maven-build -Dbuild.number=${{ github.run_id }}
 
           # 3. Publish build info to Artifactory
           jf rt build-publish my-maven-build ${{ github.run_id }}
