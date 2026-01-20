@@ -35,19 +35,24 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.8
+
       - name: Maven Build & Xray Scan
         run: |
           # 1. Config Maven to use Artifactory
-          jf mvn-config --repo-deploy-releases=pkng-libs-release-local --repo-deploy-snapshots=pkng-libs-snapshot-local --repo-resolve-releases=pkng-libs-release --repo-resolve-snapshots=pkng-libs-snapshot 
+          # jf mvn-config --repo-deploy-releases=pkng-libs-release-local --repo-deploy-snapshots=pkng-libs-snapshot-local --repo-resolve-releases=pkng-libs-release --repo-resolve-snapshots=pkng-libs-snapshot 
 
           # 2. Build and scan with Xray
-          jf mvn clean install --build-name=my-app --build-number=${{ github.run_id }} --scan
+          jf mvn clean install --build-name=my-maven-build --build-number=${{ github.run_id }} --scan
           
           # 3. Publish build info to Artifactory
-          jf rt build-publish my-app ${{ github.run_id }}
+          jf rt build-publish my-maven-build ${{ github.run_id }}
           
           # 4. Optional: Push security results to GitHub Security Tab
-          jf build-scan --format=sarif --build-name=my-app --build-number=${{ github.run_id }} > xray-results.sarif
+          jf build-scan --format=sarif --build-name=my-maven-build --build-number=${{ github.run_id }} > xray-results.sarif
 
       - name: Upload Xray Results to GitHub
         uses: github/codeql-action/upload-sarif@v3
