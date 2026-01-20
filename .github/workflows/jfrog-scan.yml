@@ -51,9 +51,11 @@ jobs:
 
           # 2.2 Run standard 'mvn'. The extension handles build-info automatically.
           # We pass build name and number as system properties.
-          mvn clean deploy -Dmaven.ext.class.path=$(pwd)/extractor.jar \
-                           -Dbuild.name=my-maven-build \
-                           -Dbuild.number=${{ github.run_id }} \ -DpublishArtifacts=true
+          mvn clean deploy \
+            -Dmaven.ext.class.path=$(pwd)/extractor.jar \
+            -Dbuild.name=my-maven-build \
+            -Dbuild.number=${{ github.run_id }} \
+            -DpublishArtifacts=true
 
           # 3. Publish build info to Artifactory
           jf rt build-publish my-maven-build ${{ github.run_id }}
